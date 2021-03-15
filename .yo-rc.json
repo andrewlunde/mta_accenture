@@ -1,0 +1,24 @@
+{
+  "generator-sap-partner-eng": {
+    "package_version": "0.3.8",
+    "project_name": "mta_accenture",
+    "app_name": "acc",
+    "app_desc": "Multi-Target Application mockup for Accenture",
+    "router_name": "acc-app",
+    "domain_name": "apps.internal",
+    "router_path": "app",
+    "database_path": "db",
+    "services_path": "srv",
+    "uaa_res_name": "acc-uaa",
+    "uaa_svc_name": "ACC_UAA",
+    "database_guid": "ffa845c4-c70e-4774-ba37-c0a6fdf16850",
+    "db_schema_name": "",
+    "sch_res_name": "acc-sch",
+    "sch_svc_name": "ACC_SCH",
+    "pyt_sch_name": "acc-pyt-sch",
+    "pyt_sch_dir": "pyt-sch",
+    "pyt_sch_api": "acc_pyt_sch_api",
+    "pyt_sch_be": "acc_pyt_sch_be",
+    "pyt_sch_route": "pyt-sch"
+  }
+}
