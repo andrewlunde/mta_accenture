@@ -1,0 +1,6 @@
+#!/bin/bash
+while read org
+do
+echo "Deleting : $org "
+cf delete-org $org -f
+done < $1
