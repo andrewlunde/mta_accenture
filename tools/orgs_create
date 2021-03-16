@@ -3,36 +3,54 @@
 do_run=0 # Don't evaluate any commands
 force=$2
 if [ "$#" -eq 2 ]; then
-  if [ $force = "-f" ]; then
+  if [ $force == "-f" ]; then
     do_run=1
+    echo ""
+    echo "Forcing command execution"
+    echo ""
   fi
 fi
+
+orgcnt=0
+START="$(date +%s)"
+
 while read org
 do
+
 
 #curl $accountsurl/accounts/v1/subaccounts --silent --location --insecure --request POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'Authorization: Bearer '$bearer --data-raw '{"betaEnabled": true, "customProperties": [ { "key": "creator", "value": "primaryuser03" } ], "description": "Subaccount created via API", "displayName": "ViaAPI", "parentGUID": "'$globalacctguid'", "region": "us21", "subaccountAdmins": [ "andrew.lunde@sap.com" ], "subdomain": "viaapi", "usedForProductionSetting": "USED_FOR_PRODUCTION"}' | jq .
 
 echo "Creating SubAccount : $org "
-cmd='curl $accountsurl/accounts/v1/subaccounts --silent --location --insecure --request POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'Authorization: Bearer '$bearer --data-raw '{"betaEnabled": true, "customProperties": [ { "key": "creator", "value": "primaryuser03" } ], "description": "Subaccount created via API", "displayName": "ViaAPI", "parentGUID": "'$globalacctguid'", "region": "us21", "subaccountAdmins": [ "andrew.lunde@sap.com" ], "subdomain": "viaapi", "usedForProductionSetting": "USED_FOR_PRODUCTION"}' | jq .'
+cmd='lastguid=$(curl $accountsurlcen/accounts/v1/subaccounts --silent --location --insecure --request POST --header '"'"'Content-Type: application/json'"'"' --header '"'"'Accept: application/json'"'"' --header '"'"'Authorization: Bearer '"'"'$bearercen --data-raw '"'"'{"betaEnabled": true, "customProperties": [ { "key": "creator", "value": "'$sapcpuser'" } ], "description": "Subaccount created via API", "displayName": "'$org'", "parentGUID": "'"'"'$globalacctguid'"'"'", "region": "us21", "subaccountAdmins": [ "andrew.lunde@sap.com" ], "subdomain": "viaapi'$orgcnt'", "usedForProductionSetting": "USED_FOR_PRODUCTION"}'"'"' | jq .guid | tr -ds '"'"'"'"'"' '"'"''"'"')'
 
 echo $cmd
 if [ $do_run -eq 1 ]; then eval $cmd; fi
 echo ""
 
+echo "LastGUID = "$lastguid
 
-echo "Creating Org : x$org "
-cmd='cf create-org x'$org''
+if [ $do_run -eq 1 ]; then 
+  state=INIT
+  while [ $state != "OK" ] && [ $lastguid != "null" ]; do
+    echo "State is "$state
+    sleep 2
+    state=$(curl $accountsurlcen/accounts/v1/subaccounts/$lastguid --silent --location --insecure --header 'Content-Type: application/json' --header 'Authorization: Bearer '$bearercen | jq .state | tr -ds '"' '')
+  done
+fi
 
-echo $cmd
-if [ $do_run -eq 1 ]; then eval $cmd; fi
-echo ""
+#https://provisioning-service.cfapps.eu10.hana.ondemand.com/api#/
 
+#space=dev
+#echo "Creating Space : $space in $org"
+#cmd='cf create-space '$space' -o '$org''
+#echo $cmd
+#if [ $do_run -eq 1 ]; then eval $cmd; fi
+#echo ""
 
-space=dev
-echo "Creating Space : $space in $org"
-cmd='cf create-space '$space' -o '$org''
-echo $cmd
-if [ $do_run -eq 1 ]; then eval $cmd; fi
-echo ""
+((orgcnt++))
 
 done < $1
+
+DURATION=$[ $(date +%s) - ${START} ]
+
+echo $orgcnt orgs processed in ${DURATION} seconds = $(( ${DURATION} / $orgcnt )) secs/org
