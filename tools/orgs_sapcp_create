@@ -109,18 +109,29 @@ if [ $do_run -eq 1 ]; then eval $cmd; fi
 
 cf target -o partner-eng-hca -s prod
 
+sleep 1
 # Now go permit HANA in this space.
+# This is not WORKING emulate UI instead
+#cmd='cf update-service pehcaza -c '"'"'{"operation":"adddatabasemapping", "orgid":"'$lastorgguid'", "spaceid":"'$lastspaceguid'"}'"'"''
+#echo $cmd
+#if [ $do_run -eq 1 ]; then eval $cmd; fi
 
-cmd='cf update-service pehcaza -c '"'"'{"operation":"adddatabasemapping", "orgid":"'$lastorgguid'", "spaceid":"'$lastspaceguid'"}'"'"''
-echo $cmd
-if [ $do_run -eq 1 ]; then eval $cmd; fi
+#echo "Giving the update a couple secs."
+#sleep 2
 
-echo "Giving the update a couple secs."
-sleep 2
+
+hanacloudspaceguid="d096c374-91ef-4e57-aef6-8088384b9bc0"
+hanaclouddbinstguid="ffa845c4-c70e-4774-ba37-c0a6fdf16850"
 
 cmd='cf service pehcaza'
 echo $cmd
 if [ $do_run -eq 1 ]; then eval $cmd; fi
+
+#cmd='lastguid=$(curl $accountsurlcen/accounts/v1/subaccounts --silent --location --insecure --request POST --header '"'"'Content-Type: application/json'"'"' --header '"'"'Accept: application/json'"'"' --header '"'"'Authorization: Bearer '"'"'$bearercen --data-raw '"'"'{"betaEnabled": true, "customProperties": [ { "key": "creator", "value": "'$sapcpuser'" } ], "description": "Subaccount created via API", "displayName": "'$org'", "parentGUID": "'"'"'$globalacctguid'"'"'", "region": "us21", "subaccountAdmins": [ "andrew.lunde@sap.com" ], "subdomain": "viaapi'$orgcnt'", "usedForProductionSetting": "USED_FOR_PRODUCTION"}'"'"' | jq .guid | tr -ds '"'"'"'"'"' '"'"''"'"')'
+cmd='lastmappingid=$(curl https://hana-cockpit.cfapps.us21.hana.ondemand.com/hana-inventory/sap/hana/cloud/inventory/api/v1/spaces/'$hanacloudspaceguid'/hana/'$hanaclouddbinstguid'/mappings -x localhost:8080 --silent --location --insecure --request PUT --header '"'"'Content-Type: application/json'"'"' --data-raw '"'"'{"database_id": "'$hanaclouddbinstguid'", "organization_guid": "'$lastorgguid'", "space_guid": "'$lastspaceguid'"}'"'"' | jq .guid | tr -ds '"'"'"'"'"' '"'"''"'"')'
+echo $cmd
+if [ $do_run -eq 1 ]; then eval $cmd; fi
+
 
 cmd='cf target -o '$org' -s '$space
 echo $cmd
